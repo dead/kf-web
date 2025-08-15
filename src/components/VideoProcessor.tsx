@@ -364,7 +364,7 @@ const VideoProcessor: React.FC = () => {
                   <input
                     type="range"
                     min="0"
-                    max="100"
+                    max="150"
                     value={scenecut}
                     onChange={(e) => setScenecut(parseInt(e.target.value))}
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
@@ -470,9 +470,9 @@ const VideoProcessor: React.FC = () => {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">Processing Log</CardTitle>
+                  <CardTitle className="text-xl">Keyframes</CardTitle>
                   <CardDescription className="text-base">
-                    FFmpeg analysis results and statistics
+                    FFmpeg keyframes statistics
                   </CardDescription>
                 </div>
               </div>
@@ -487,7 +487,7 @@ const VideoProcessor: React.FC = () => {
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     </div>
                     <span className="ml-4 text-gray-400 text-xs">
-                      FFmpeg Output
+                      Keyframes Output
                     </span>
                   </div>
                   <pre className="whitespace-pre-wrap leading-relaxed">
@@ -499,7 +499,7 @@ const VideoProcessor: React.FC = () => {
                   className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
                 >
                   <Download className="mr-2 h-5 w-5" />
-                  Download Log File
+                  Download Keyframes File
                 </Button>
               </div>
             </CardContent>
