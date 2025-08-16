@@ -631,7 +631,7 @@ const VideoProcessor: React.FC = () => {
 
                     {/* Timeline Progress Bar with Keyframe Markers */}
                     <div className="relative overflow-x-scroll">
-                      <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                      <div className="w-full h-4 relative">
                         {/* Progress Bar */}
                         <div
                           className="bg-gradient-to-r from-blue-500 to-purple-500 h-4 transition-all duration-200"
