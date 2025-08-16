@@ -38,9 +38,14 @@ const VideoProcessor: React.FC = () => {
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const [threads, setThreads] = useState<number>(4);
   const [scenecut, setScenecut] = useState<number>(40);
+  const [videoUrl, setVideoUrl] = useState<string>("");
+  const [keyframes, setKeyframes] = useState<number[]>([]);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
 
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const loadFFmpeg = useCallback(async () => {
     if (ffmpegLoaded) return;
@@ -115,6 +120,10 @@ const VideoProcessor: React.FC = () => {
     if (videoFile) {
       setFile(videoFile);
       setLogContent("");
+      setKeyframes([]);
+      // Create video URL for preview
+      const url = URL.createObjectURL(videoFile);
+      setVideoUrl(url);
     }
   }, []);
 
@@ -124,10 +133,44 @@ const VideoProcessor: React.FC = () => {
       if (selectedFile && selectedFile.type.startsWith("video/mp4")) {
         setFile(selectedFile);
         setLogContent("");
+        setKeyframes([]);
+        // Create video URL for preview
+        const url = URL.createObjectURL(selectedFile);
+        setVideoUrl(url);
       }
     },
     []
   );
+
+  const parseKeyframesFromLog = useCallback((logText: string) => {
+    const lines = logText.split("\n");
+    const pTypeFrames: number[] = [];
+
+    // Get fps from options line
+    let fps = 24; // default fps
+    const optionsLine = lines.find((line) => line.startsWith("#options:"));
+    if (optionsLine) {
+      const fpsMatch = optionsLine.match(/fps=(\d+)\/(\d+)/);
+      if (fpsMatch) {
+        fps = parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]);
+      }
+    }
+
+    // Parse I-type frames
+    for (const line of lines) {
+      if (line.includes("type:I")) {
+        const inMatch = line.match(/in:(\d+)/);
+        if (inMatch) {
+          const frameNumber = parseInt(inMatch[1]);
+          pTypeFrames.push(frameNumber);
+        }
+      }
+    }
+
+    // Convert frame numbers to timestamps and set keyframes
+    const timestamps = pTypeFrames.map((frame) => frame / fps);
+    setKeyframes(timestamps);
+  }, []);
 
   const processVideo = useCallback(async () => {
     if (!file || !ffmpegRef.current) return;
@@ -177,6 +220,8 @@ const VideoProcessor: React.FC = () => {
         }
 
         setLogContent(logText);
+        // Parse keyframes from the log
+        parseKeyframesFromLog(logText);
         setStatus((prev) => ({
           ...prev,
           isProcessing: false,
@@ -199,7 +244,31 @@ const VideoProcessor: React.FC = () => {
         message: `Error processing video: ${error}`,
       }));
     }
-  }, [file, threads, scenecut]);
+  }, [file, threads, scenecut, parseKeyframesFromLog]);
+
+  const handleVideoLoadedMetadata = useCallback(() => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  }, []);
+
+  const handleVideoTimeUpdate = useCallback(() => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  }, []);
+
+  const handleKeyframeClick = useCallback((timestamp: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = timestamp;
+    }
+  }, []);
+
+  const formatTime = useCallback((time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }, []);
 
   const downloadLog = useCallback(() => {
     if (!logContent) return;
@@ -501,6 +570,92 @@ const VideoProcessor: React.FC = () => {
                   <Download className="mr-2 h-5 w-5" />
                   Download Keyframes File
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Video Player and Timeline */}
+        {videoUrl && (
+          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full bg-blue-100">
+                  <Video className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Video Preview</CardTitle>
+                  <CardDescription className="text-base">
+                    Watch your video and navigate using I-frame keyframes from
+                    the analysis
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Video Player */}
+                <div className="relative bg-black rounded-xl overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    controls
+                    className="w-full max-h-96 object-contain"
+                    onLoadedMetadata={handleVideoLoadedMetadata}
+                    onTimeUpdate={handleVideoTimeUpdate}
+                  />
+                </div>
+
+                {/* I-Frame Keyframes Timeline */}
+                {keyframes.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-700">
+                      I-Frame Keyframes ({keyframes.length} frames)
+                    </h4>
+
+                    {/* Timeline Progress Bar with Keyframe Markers */}
+                    <div className="relative overflow-x-scroll">
+                      <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                        {/* Progress Bar */}
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-4 transition-all duration-200"
+                          style={{
+                            width: `${
+                              duration > 0 ? (currentTime / duration) * 1000 : 0
+                            }%`,
+                          }}
+                        />
+
+                        {/* Keyframe Markers */}
+                        {keyframes.map((timestamp, index) => (
+                          <div
+                            key={index}
+                            className="absolute top-0 w-1 h-4 bg-orange-500 cursor-pointer hover:bg-orange-600 rounded transition-colors duration-200"
+                            style={{
+                              left: `${
+                                duration > 0 ? (timestamp / duration) * 1000 : 0
+                              }%`,
+                              transform: "translateX(-50%)",
+                            }}
+                            onClick={() => handleKeyframeClick(timestamp)}
+                            title={`I-frame at ${formatTime(timestamp)}`}
+                          />
+                        ))}
+
+                        {/* Current Time Indicator */}
+                        <div
+                          className="absolute top-0 w-0.5 h-4 bg-white shadow-md"
+                          style={{
+                            left: `${
+                              duration > 0 ? (currentTime / duration) * 1000 : 0
+                            }%`,
+                            transform: "translateX(-50%)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
