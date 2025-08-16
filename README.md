@@ -1,15 +1,15 @@
-# KF-Web - FFmpeg Video Processor
+# KF-Web - FFmpeg Keyframes Processor
 
-A beautiful React SPA built with Vite, Tailwind CSS, and shadcn/ui components that processes MP4 videos using FFmpeg WebAssembly.
+A beautiful React SPA built with Vite, Tailwind CSS, and shadcn/ui components that processes keyframes of MP4 videos using FFmpeg WebAssembly.
 
 ## Features
 
-- 🎬 **Drag & Drop Video Upload** - Easy MP4 file upload interface
+- 🎬 **Drag & Drop Video File** - Easy Select MP4 file interface
 - ⚡ **Auto-Processing** - Videos are processed automatically upon selection
 - 🔧 **Configurable Parameters** - Adjust threads (1-16) and scenecut threshold (0-100)
-- 📋 **Log Generation** - Generates detailed FFmpeg analysis logs
-- 💾 **Download Results** - One-click download of processing logs
-- 🎨 **Beautiful UI** - Glass-morphism design with smooth animations
+- 📋 **Keyframe Generation** - Generates detailed FFmpeg keyframe extraction
+- 💾 **Download Results** - One-click download of keyframe extraction
+- 🎥 **Video Preview** - Preview the video with keyframes highlighted
 - 🚀 **Client-Side Processing** - No server required, runs entirely in the browser
 
 ## Technology Stack
@@ -81,10 +81,10 @@ You can also trigger deployment manually:
 
 ## Usage
 
-1. **Upload Video**: Drag and drop an MP4 file or click to browse
+1. **Send Video**: Drag and drop an MP4 file or click to browse
 2. **Configure Settings**: Adjust threads and scenecut threshold using the sliders
 3. **Auto-Processing**: The video will be processed automatically after selection
-4. **Download Log**: Click the download button to save the FFmpeg analysis log
+4. **Download Keyframes**: Click the download button to save the extracted keyframes
 
 ## FFmpeg Command
 
@@ -102,10 +102,6 @@ ffmpeg -i video.mp4 -c:v libx264 -profile:v high -preset:v ultrafast -tune anima
 ## Browser Support
 
 - Modern browsers with WebAssembly support
-- Chrome 57+
-- Firefox 52+
-- Safari 11+
-- Edge 16+
 
 ## License
 
