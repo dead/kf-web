@@ -35,9 +35,15 @@ const VideoProcessor: React.FC = () => {
     progress: 0,
     message: "",
   });
+  const savedThreads = localStorage.getItem("kf-web-threads");
+  const savedScenecut = localStorage.getItem("kf-web-scenecut");
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
-  const [threads, setThreads] = useState<number>(4);
-  const [scenecut, setScenecut] = useState<number>(40);
+  const [threads, setThreads] = useState<number>(
+    savedThreads ? parseInt(savedThreads) : 4
+  );
+  const [scenecut, setScenecut] = useState<number>(
+    savedScenecut ? parseInt(savedScenecut) : 120
+  );
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [keyframes, setKeyframes] = useState<number[]>([]);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -46,6 +52,16 @@ const VideoProcessor: React.FC = () => {
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Save threads to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("kf-web-threads", threads.toString());
+  }, [threads]);
+
+  // Save scenecut to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("kf-web-scenecut", scenecut.toString());
+  }, [scenecut]);
 
   const loadFFmpeg = useCallback(async () => {
     if (ffmpegLoaded) return;
